@@ -113,3 +113,5 @@ else:
         create_pie_chart(filtered_category_df.head(num_games), f'{category} Rating Distribution')
     else:
         st.write("No categories available in the selected dataset.")
+
+st.info("build by dw v1 7/10/24")
