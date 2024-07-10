@@ -72,13 +72,13 @@ else:
         st.write("### Top Paid Games")
         create_bar_chart(data_df[data_df['Category'] == 'Top Paid Apps'], 'Top Paid Apps', 'Position', 'Game Name')
 
-    # Top Grossing Games and Game Name by Rank in the second column
+    # Top Grossing Games and Game Name by Rating in the second column
     with col2:
         st.write("### Top Grossing Games")
         create_bar_chart(data_df[data_df['Category'] == 'Top Grossing Apps'], 'Top Grossing Apps', 'Position', 'Game Name')
 
         st.write("### Game Name by Rating")
-        create_bar_chart(data_df, 'Game Name by Rank', 'Position', 'Game Name')
+        create_bar_chart(data_df, 'Game Name by Rating', 'Rating', 'Game Name')
 
     if show_detailed_view:
         # Display columns of the uploaded CSV file
@@ -113,6 +113,3 @@ else:
         create_pie_chart(filtered_category_df.head(num_games), f'{category} Rating Distribution')
     else:
         st.write("No categories available in the selected dataset.")
-
-
-st.info("build by dw v1 7/10/24")
