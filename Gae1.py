@@ -103,7 +103,7 @@ else:
         def create_pie_chart(df, title):
             rating_counts = df['Rating'].value_counts()
             plt.figure(figsize=(8, 8))
-            plt.pie(rating_counts, labels=rating_counts.index, autopct='%1.1f%%', startangle=140, colors=sns.color_palette('cividis'))
+            plt.pie(rating_counts, labels=rating_counts.index, autopct='%1.1f%%', startangle=140, colors=sns.color_palette('plasma'))
             plt.title(title, color='white')
             plt.gca().patch.set_facecolor('#303030')
             plt.gcf().set_facecolor('#303030')
