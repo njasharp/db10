@@ -77,7 +77,7 @@ else:
         st.write("### Top Grossing Games")
         create_bar_chart(data_df[data_df['Category'] == 'Top Grossing Apps'], 'Top Grossing Apps', 'Position', 'Game Name')
 
-        st.write("### Game Name by Rank")
+        st.write("### Game Name by Rating")
         create_bar_chart(data_df, 'Game Name by Rank', 'Position', 'Game Name')
 
     if show_detailed_view:
