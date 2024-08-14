@@ -190,4 +190,4 @@ else:
 
 st.info("build by dw v1 8/14/24")
 st.success("IOS - United Arab Emirates - ok")
-st.warning("Android - United Arab Emirates, Saudi Arabia, Egypt, Iraq, Morocco - testing data live not confirmed ")
+st.warning("Android - United Arab Emirates, Saudi Arabia, Egypt, Iraq, Morocco - data live - testing  ")
