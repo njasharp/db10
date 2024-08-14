@@ -18,6 +18,9 @@ def load_data(region, file_path=None, platform='iOS'):
             return pd.DataFrame()
         df.columns = df.columns.str.strip()  # Strip spaces from column names
         return df
+    except FileNotFoundError:
+        st.warning(f"Default file not found for {platform} in {region}. Please upload a CSV file.")
+        return pd.DataFrame()
     except Exception as e:
         st.error(f"Error loading data: {e}")
         return pd.DataFrame()  # Return an empty DataFrame in case of error
@@ -31,10 +34,21 @@ st.sidebar.title("Select Region")
 region = st.sidebar.radio("Select Region", ['United Arab Emirates', 'Saudi Arabia', 'Egypt', 'Iraq', 'Morocco'])
 
 uploaded_file = None
-if region != 'United Arab Emirates':
-    uploaded_file = st.sidebar.file_uploader(f"Choose a CSV file for {region} ({platform})", type="csv")
+data_df = pd.DataFrame()
 
-data_df = load_data(region, uploaded_file, platform)
+# Attempt to load data from the default file
+data_df = load_data(region, file_path=None, platform=platform)
+
+# If the default file is not found or data is empty, prompt for file upload
+if data_df.empty:
+    uploaded_file = st.sidebar.file_uploader(f"Choose a CSV file for {region} ({platform})", type="csv")
+    if uploaded_file is not None:
+        data_df = load_data(region, uploaded_file, platform)
+
+# After file upload, remove any warnings or errors
+if not data_df.empty:
+    st.sidebar.empty()  # Clears the sidebar (removes warnings)
+    st.empty()  # Clears any error messages in the main area
 
 # Option to show/hide detailed view
 show_detailed_view = st.sidebar.checkbox("Show Detailed View", True)
@@ -44,9 +58,10 @@ required_columns = ['Category', 'Game Name', 'Rating', 'Position']
 if not all(col in data_df.columns for col in required_columns):
     st.error(f"CSV file does not contain required columns: {', '.join(required_columns)}.")
 else:
-    # Sidebar for number of games to display
+    # Sidebar for number of games to display with max set to number of rows in the file
+    max_games = len(data_df)
     st.sidebar.title("Select number of top games to display")
-    num_games = st.sidebar.slider("Select number of top games to display", 5, 25, 10)
+    num_games = st.sidebar.slider("Select number of top games to display", 5, min(25, max_games), min(10, max_games))
 
     # Function to create bar charts using Seaborn with dark theme
     def create_bar_chart(df, title, x_col, y_col):
@@ -78,7 +93,7 @@ else:
     # Define possible categories
     free_categories = ['Top Free Apps', 'Free']
     paid_categories = ['Top Paid Apps', 'Paid']
-    grossing_categories = ['Top Grossing Apps', 'Grossing']
+    grossing_categories = ['Top Grossing Apps', 'Grossing', 'Top Grossing']
 
     # Top Free Games and Top Paid Games in the first column
     col1, col2 = st.columns(2)
