@@ -19,11 +19,10 @@ def load_data(region, file_path=None, platform='iOS'):
         df.columns = df.columns.str.strip()  # Strip spaces from column names
         return df
     except FileNotFoundError:
-        st.warning(f"Default file not found for {platform} in {region}. Please upload a CSV file.")
-        return pd.DataFrame()
+        return None  # Return None to indicate the file was not found
     except Exception as e:
         st.error(f"Error loading data: {e}")
-        return pd.DataFrame()  # Return an empty DataFrame in case of error
+        return pd.DataFrame()  # Return an empty DataFrame in case of other errors
 
 # Sidebar for platform selection
 st.sidebar.title("Select Platform")
@@ -33,22 +32,31 @@ platform = st.sidebar.radio("Select Platform", ['iOS', 'Android'])
 st.sidebar.title("Select Region")
 region = st.sidebar.radio("Select Region", ['United Arab Emirates', 'Saudi Arabia', 'Egypt', 'Iraq', 'Morocco'])
 
-uploaded_file = None
-data_df = pd.DataFrame()
+# Load the default data
+default_data_df = load_data(region, file_path=None, platform=platform)
 
-# Attempt to load data from the default file
-data_df = load_data(region, file_path=None, platform=platform)
+uploaded_file = st.sidebar.file_uploader(f"Choose a CSV file for {region} ({platform})", type="csv")
 
-# If the default file is not found or data is empty, prompt for file upload
-if data_df.empty:
-    uploaded_file = st.sidebar.file_uploader(f"Choose a CSV file for {region} ({platform})", type="csv")
-    if uploaded_file is not None:
-        data_df = load_data(region, uploaded_file, platform)
+# Determine which data to use: default or uploaded
+if uploaded_file is not None:
+    data_df = pd.read_csv(uploaded_file)
+    st.sidebar.success("CSV file successfully uploaded.")
+    use_uploaded = st.sidebar.radio("Select Data Source", ['Use Uploaded File', 'Use Default File'])
+    if use_uploaded == 'Use Default File' and default_data_df is not None:
+        data_df = default_data_df
+    else:
+        default_data_df = None  # Clear the default data to avoid conflicts
+else:
+    if default_data_df is not None:
+        data_df = default_data_df
+    else:
+        st.warning(f"Default file not found for {platform} in {region}. Please upload a CSV file.")
+        data_df = pd.DataFrame()  # Ensure data_df is initialized as an empty DataFrame
 
-# After file upload, remove any warnings or errors
+# Clear any remaining warnings or errors after data is loaded
 if not data_df.empty:
-    st.sidebar.empty()  # Clears the sidebar (removes warnings)
-    st.empty()  # Clears any error messages in the main area
+    st.empty()  # Clears any previous warnings or errors
+    st.sidebar.empty()  # Clears the sidebar of warnings
 
 # Option to show/hide detailed view
 show_detailed_view = st.sidebar.checkbox("Show Detailed View", True)
@@ -159,3 +167,4 @@ else:
         st.write("No categories available in the selected dataset.")
 
 st.info("build by dw v1 8/14/24")
+st.write("Default file is IOS/UAE")
