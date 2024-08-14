@@ -2,20 +2,41 @@ import streamlit as st
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import os
 
 # Define function to load data
 @st.cache_data
-def load_data(region, file_path=None, platform='iOS'):
+def load_data(region, platform='iOS'):
     try:
-        if region == 'United Arab Emirates' and file_path is None:
-            # Use default data for UAE
-            default_file_path = f't25-uae-{platform.lower()}.csv'
-            df = pd.read_csv(default_file_path)
-        elif file_path:
+        # Define the default file paths for iOS
+        ios_file_mapping = {
+            'United Arab Emirates': 't25-uae-ios.csv',
+            'Saudi Arabia': 't25-saudi-ios.csv',
+            'Egypt': 't25-egypt-ios.csv',
+            'Iraq': 't25-iraq-ios.csv',
+            'Morocco': 't25-morocco-ios.csv'
+        }
+        
+        # Define the directory for Android files
+        android_directory = 'data8-14and/'
+        android_file_mapping = {
+            'United Arab Emirates': 'top_20_combined_clean_games_UAE.csv',
+            'Saudi Arabia': 'top_20_combined_clean_games_Saudi Arabia.csv',
+            'Egypt': 'top_20_combined_clean_games_Egypt.csv',
+            'Iraq': 'top_20_combined_clean_games_Iraq.csv',
+            'Morocco': 'top_20_combined_clean_games_Morocco.csv'
+        }
+
+        if platform == 'iOS' and region in ios_file_mapping:
+            file_path = ios_file_mapping[region]
+            df = pd.read_csv(file_path)
+        elif platform == 'Android' and region in android_file_mapping:
+            file_path = os.path.join(android_directory, android_file_mapping[region])
             df = pd.read_csv(file_path)
         else:
-            st.error("Please upload a CSV file for the selected region.")
+            st.error("Region not recognized or file not available.")
             return pd.DataFrame()
+
         df.columns = df.columns.str.strip()  # Strip spaces from column names
         return df
     except FileNotFoundError:
@@ -33,7 +54,7 @@ st.sidebar.title("Select Region")
 region = st.sidebar.radio("Select Region", ['United Arab Emirates', 'Saudi Arabia', 'Egypt', 'Iraq', 'Morocco'])
 
 # Load the default data
-default_data_df = load_data(region, file_path=None, platform=platform)
+default_data_df = load_data(region, platform=platform)
 
 uploaded_file = st.sidebar.file_uploader(f"Choose a CSV file for {region} ({platform})", type="csv")
 
@@ -167,4 +188,5 @@ else:
         st.write("No categories available in the selected dataset.")
 
 st.info("build by dw v1 8/14/24")
-st.write("Default file is IOS/UAE")
+st.success(" IOS - UAE - ok")
+st.warning("AND - UAE,SA,EGT,IRQ,RC - under review")
