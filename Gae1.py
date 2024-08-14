@@ -5,11 +5,11 @@ import matplotlib.pyplot as plt
 
 # Define function to load data
 @st.cache_data
-def load_data(region, file_path=None):
+def load_data(region, file_path=None, platform='iOS'):
     try:
         if region == 'United Arab Emirates' and file_path is None:
             # Use default data for UAE
-            default_file_path = 't25-uae-ios.csv'
+            default_file_path = f't25-uae-{platform.lower()}.csv'
             df = pd.read_csv(default_file_path)
         elif file_path:
             df = pd.read_csv(file_path)
@@ -22,15 +22,19 @@ def load_data(region, file_path=None):
         st.error(f"Error loading data: {e}")
         return pd.DataFrame()  # Return an empty DataFrame in case of error
 
-# Sidebar for filters
+# Sidebar for platform selection
+st.sidebar.title("Select Platform")
+platform = st.sidebar.radio("Select Platform", ['iOS', 'Android'])
+
+# Sidebar for region selection
 st.sidebar.title("Select Region")
 region = st.sidebar.radio("Select Region", ['United Arab Emirates', 'Saudi Arabia', 'Egypt', 'Iraq', 'Morocco'])
 
 uploaded_file = None
 if region != 'United Arab Emirates':
-    uploaded_file = st.sidebar.file_uploader("Choose a CSV file for " + region, type="csv")
+    uploaded_file = st.sidebar.file_uploader(f"Choose a CSV file for {region} ({platform})", type="csv")
 
-data_df = load_data(region, uploaded_file)
+data_df = load_data(region, uploaded_file, platform)
 
 # Option to show/hide detailed view
 show_detailed_view = st.sidebar.checkbox("Show Detailed View", True)
@@ -46,6 +50,10 @@ else:
 
     # Function to create bar charts using Seaborn with dark theme
     def create_bar_chart(df, title, x_col, y_col):
+        if df.empty:
+            st.warning(f"No data available for {title}")
+            return
+        
         plt.figure(figsize=(10, 6))
         sns.set(style="darkgrid")
         sns.set_palette("viridis")
@@ -60,22 +68,34 @@ else:
         plt.gcf().set_facecolor('#303030')
         st.pyplot(plt)
 
+    # Function to filter data by multiple possible category names
+    def filter_data_by_category(df, categories):
+        return df[df['Category'].isin(categories)]
+    
     # Streamlit app layout
-    st.title(f'Top iOS Ranked Games by Category in {region}')
+    st.title(f'Top {platform} Ranked Games by Category in {region}')
+
+    # Define possible categories
+    free_categories = ['Top Free Apps', 'Free']
+    paid_categories = ['Top Paid Apps', 'Paid']
+    grossing_categories = ['Top Grossing Apps', 'Grossing']
 
     # Top Free Games and Top Paid Games in the first column
     col1, col2 = st.columns(2)
     with col1:
         st.write("### Top Free Games")
-        create_bar_chart(data_df[data_df['Category'] == 'Top Free Apps'], 'Top Free Apps', 'Position', 'Game Name')
+        free_data = filter_data_by_category(data_df, free_categories)
+        create_bar_chart(free_data, 'Top Free Apps', 'Position', 'Game Name')
 
         st.write("### Top Paid Games")
-        create_bar_chart(data_df[data_df['Category'] == 'Top Paid Apps'], 'Top Paid Apps', 'Position', 'Game Name')
+        paid_data = filter_data_by_category(data_df, paid_categories)
+        create_bar_chart(paid_data, 'Top Paid Apps', 'Position', 'Game Name')
 
     # Top Grossing Games and Game Name by Rating in the second column
     with col2:
         st.write("### Top Grossing Games")
-        create_bar_chart(data_df[data_df['Category'] == 'Top Grossing Apps'], 'Top Grossing Apps', 'Position', 'Game Name')
+        grossing_data = filter_data_by_category(data_df, grossing_categories)
+        create_bar_chart(grossing_data, 'Top Grossing Apps', 'Position', 'Game Name')
 
         st.write("### Game Name by Rating")
         create_bar_chart(data_df, 'Game Name by Rating', 'Rating', 'Game Name')
@@ -93,7 +113,7 @@ else:
         
         # Displaying detailed tables
         if show_detailed_view:
-            st.write("### Detailed View selected Category")
+            st.write(f"### Detailed View: {category}")
             st.dataframe(filtered_category_df.head(num_games))
         
         # Creating bar chart for the selected category
@@ -101,6 +121,10 @@ else:
         
         # Creating pie charts for distribution of ratings
         def create_pie_chart(df, title):
+            if df.empty:
+                st.warning(f"No data available for {title}")
+                return
+            
             rating_counts = df['Rating'].value_counts()
             plt.figure(figsize=(8, 8))
             plt.pie(rating_counts, labels=rating_counts.index, autopct='%1.1f%%', startangle=140, colors=sns.color_palette('plasma'))
@@ -114,9 +138,9 @@ else:
                 text.set_color('white')
             st.pyplot(plt)
         
-        st.write("### Rating Distribution for Selected Category")
+        st.write(f"### Rating Distribution for {category}")
         create_pie_chart(filtered_category_df.head(num_games), f'{category} Rating Distribution')
     else:
         st.write("No categories available in the selected dataset.")
 
-st.info("build by dw v1 7/10/24")
+st.info("build by dw v1 8/14/24")
