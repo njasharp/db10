@@ -45,6 +45,7 @@ def load_data(region, platform='iOS'):
         st.error(f"Error loading data: {e}")
         return pd.DataFrame()  # Return an empty DataFrame in case of other errors
 
+st.sidebar.write("Top rank data")
 # Sidebar for platform selection
 st.sidebar.title("Select Platform")
 platform = st.sidebar.radio("Select Platform", ['iOS', 'Android'])
@@ -188,5 +189,5 @@ else:
         st.write("No categories available in the selected dataset.")
 
 st.info("build by dw v1 8/14/24")
-st.success(" IOS - United Arab Emirates - ok")
+st.success("IOS - United Arab Emirates - ok")
 st.warning("Android - United Arab Emirates, Saudi Arabia, Egypt, Iraq, Morocco - testing data live not confirmed ")
