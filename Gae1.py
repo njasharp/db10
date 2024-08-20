@@ -8,39 +8,48 @@ import os
 @st.cache_data
 def load_data(region, platform='iOS'):
     try:
-        # Define the default file paths for iOS
-        ios_file_mapping = {
-            'United Arab Emirates': 't25-uae-ios.csv',
-            'Saudi Arabia': 't25-saudi-ios.csv',
-            'Egypt': 't25-egypt-ios.csv',
-            'Iraq': 't25-iraq-ios.csv',
-            'Morocco': 't25-morocco-ios.csv'
-        }
-        
-        # Define the directory for Android files
-        android_directory = 'data8-14and/'
-        android_file_mapping = {
-            'United Arab Emirates': 'top_20_combined_clean_games_UAE.csv',
-            'Saudi Arabia': 'top_20_combined_clean_games_Saudi Arabia.csv',
-            'Egypt': 'top_20_combined_clean_games_Egypt.csv',
-            'Iraq': 'top_20_combined_clean_games_Iraq.csv',
-            'Morocco': 'top_20_combined_clean_games_Morocco.csv'
+        # Define the directory where the files are located
+        data_directory = './comb/'
+
+        # Define the file names to look for based on region and platform
+        file_mapping = {
+            'United Arab Emirates': {
+                'iOS': 'uae_iphone_games.csv',
+                'Android': 'uae_android_games.csv'
+            },
+            'Saudi Arabia': {
+                'iOS': 'saudi_iphone_games.csv',
+                'Android': 'saudi_android_games.csv'
+            },
+            'Egypt': {
+                'iOS': 'egypt_iphone_games.csv',
+                'Android': 'egypt_android_games.csv'
+            },
+            'Iraq': {
+                'iOS': 'iraq_iphone_games.csv',
+                'Android': 'iraq_android_games.csv'
+            },
+            'Morocco': {
+                'iOS': 'morocco_iphone_games.csv',
+                'Android': 'morocco_android_games.csv'
+            }
         }
 
-        if platform == 'iOS' and region in ios_file_mapping:
-            file_path = ios_file_mapping[region]
-            df = pd.read_csv(file_path)
-        elif platform == 'Android' and region in android_file_mapping:
-            file_path = os.path.join(android_directory, android_file_mapping[region])
-            df = pd.read_csv(file_path)
-        else:
-            st.error("Region not recognized or file not available.")
-            return pd.DataFrame()
+        if region in file_mapping:
+            platform_file = file_mapping[region].get(platform)
+            if platform_file:
+                selected_file = os.path.join(data_directory, platform_file)
+                if os.path.exists(selected_file):
+                    df = pd.read_csv(selected_file)
+                    df.columns = df.columns.str.strip()  # Strip spaces from column names
+                    return df
+                else:
+                    st.error(f"File not found: {selected_file}")
+                    return pd.DataFrame()
 
-        df.columns = df.columns.str.strip()  # Strip spaces from column names
-        return df
-    except FileNotFoundError:
-        return None  # Return None to indicate the file was not found
+        st.error(f"No files found for {region} ({platform}).")
+        return pd.DataFrame()
+
     except Exception as e:
         st.error(f"Error loading data: {e}")
         return pd.DataFrame()  # Return an empty DataFrame in case of other errors
@@ -52,9 +61,9 @@ platform = st.sidebar.radio("Select Platform", ['iOS', 'Android'])
 
 # Sidebar for region selection
 st.sidebar.title("Select Region")
-region = st.sidebar.radio("Select Region", ['United Arab Emirates', 'Saudi Arabia', 'Egypt', 'Iraq', 'Morocco'])
+region = st.sidebar.radio("Select Region", ['United Arab Emirates', 'Saudi Arabia', 'Egypt',])
 
-# Load the default data
+# Load the default data based on selected region and platform
 default_data_df = load_data(region, platform=platform)
 
 uploaded_file = st.sidebar.file_uploader(f"Choose a CSV file for {region} ({platform})", type="csv")
@@ -64,12 +73,10 @@ if uploaded_file is not None:
     data_df = pd.read_csv(uploaded_file)
     st.sidebar.success("CSV file successfully uploaded.")
     use_uploaded = st.sidebar.radio("Select Data Source", ['Use Uploaded File', 'Use Default File'])
-    if use_uploaded == 'Use Default File' and default_data_df is not None:
+    if use_uploaded == 'Use Default File' and not default_data_df.empty:
         data_df = default_data_df
-    else:
-        default_data_df = None  # Clear the default data to avoid conflicts
 else:
-    if default_data_df is not None:
+    if not default_data_df.empty:
         data_df = default_data_df
     else:
         st.warning(f"Default file not found for {platform} in {region}. Please upload a CSV file.")
@@ -121,9 +128,9 @@ else:
     st.title(f'Top {platform} Ranked Games by Category in {region}')
 
     # Define possible categories
-    free_categories = ['Top Free Apps', 'Free']
-    paid_categories = ['Top Paid Apps', 'Paid']
-    grossing_categories = ['Top Grossing Apps', 'Grossing', 'Top Grossing']
+    free_categories = ['Top Free Games', 'Free', 'Top Free']
+    paid_categories = ['Top Paid Games', 'Paid', 'Top Paid' ]
+    grossing_categories = ['Top Grossing Games', 'Grossing', 'Top Grossing']
 
     # Top Free Games and Top Paid Games in the first column
     col1, col2 = st.columns(2)
@@ -188,6 +195,6 @@ else:
     else:
         st.write("No categories available in the selected dataset.")
 
-st.info("build by dw v1 8/14/24")
-st.success("IOS - United Arab Emirates - ok")
-st.warning("Android - United Arab Emirates, Saudi Arabia, Egypt, Iraq, Morocco - data live - testing  ")
+st.info("build by dw v1 8/19/24")
+st.success("Data successfully loaded from the first available file")
+st.warning("Ensure that the file names match the expected names for each region and platform")
